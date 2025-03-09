@@ -1,2 +1,1 @@
-web: gunicorn app:app
-
+web: gunicorn Pancreasafe_app:app
