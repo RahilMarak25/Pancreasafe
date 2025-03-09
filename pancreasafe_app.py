@@ -15,7 +15,7 @@ UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Make sure the 'models' folder exists and contains 'BEST_CNN2.keras'
-MODEL_PATH = os.path.join(os.getcwd(), 'models', 'BEST_CNN2.keras')
+MODEL_PATH = os.path.join("models", "BEST_CNN2.keras")
 try:
     model = load_model(MODEL_PATH)
     print("Model loaded successfully.")
