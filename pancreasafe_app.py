@@ -17,7 +17,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Update the model path relative to your project repository.
 MODEL_PATH = os.path.join(os.getcwd(), 'models', 'BEST_CNN2.keras')
 try:
-    model = load_model(models/BEST_CNN2.keras)
+    model = load_model(MODEL_PATH)
     print("Model loaded successfully.")
 except Exception as e:
     print(f"Error loading model: {e}")
@@ -60,13 +60,12 @@ def home():
         <meta charset="UTF-8">
         <title>Pancrea Safe | AI-Powered Pancreatic Analysis</title>
         <style>
-            /* CSS omitted for brevity; same as your original */
+            /* (CSS omitted for brevity) */
         </style>
     </head>
     <body>
-        <!-- The same HTML/JS from your original code -->
         <header class="header">
-            <!-- ... -->
+            <!-- Your header content -->
         </header>
         <div class="container">
             <div class="hero">
@@ -81,18 +80,58 @@ def home():
                 <div id="preview" alt="Folder preview"></div>
                 <div id="result"></div>
             </div>
-            <!-- Feature cards, etc. -->
+            <!-- Additional sections as needed -->
         </div>
         <footer>
             <p>© 2024 Pancrea Safe. Advancing medical diagnostics through AI innovation.</p>
         </footer>
         <script>
-            // JavaScript from your original code
             document.getElementById('fileInput').addEventListener('change', function(e) {
-                // ...
+                const preview = document.getElementById('preview');
+                preview.style.display = 'block';
+                let fileList = "<ul>";
+                for (let i = 0; i < e.target.files.length; i++){
+                    fileList += "<li>" + e.target.files[i].webkitRelativePath + "</li>";
+                }
+                fileList += "</ul>";
+                preview.innerHTML = fileList;
             });
+
             function analyze() {
-                // ...
+                const fileInput = document.getElementById('fileInput');
+                const resultDiv = document.getElementById('result');
+                const preview = document.getElementById('preview');
+
+                if (!fileInput.files.length) {
+                    alert('Please select a DICOM folder first!');
+                    return;
+                }
+
+                const formData = new FormData();
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    formData.append('files', fileInput.files[i]);
+                }
+
+                resultDiv.style.display = 'flex';
+                resultDiv.innerHTML = '<div class="loader"></div><span>Analyzing DICOM folder...</span>';
+                resultDiv.className = '';
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    resultDiv.innerHTML = data.prediction.includes('No')
+                        ? '🎉 <span style="margin-left: 12px;">No Tumor Detected</span>'
+                        : '⚠️ <span style="margin-left: 12px;">Tumor Detected</span>';
+                    resultDiv.className = data.prediction.includes('No') ? 'no-tumor' : 'tumor';
+                    preview.style.display = 'none';
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = '⚠️ Error processing DICOM folder';
+                    resultDiv.className = 'tumor';
+                });
             }
         </script>
     </body>
@@ -103,6 +142,7 @@ def home():
 def predict():
     if model is None:
         return jsonify({'prediction': 'Model not available'})
+
     files = request.files.getlist('files')
     if not files:
         return jsonify({'prediction': 'No files uploaded'})
@@ -137,7 +177,6 @@ if __name__ == '__main__':
         shutil.rmtree(UPLOAD_FOLDER)
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # For local testing, defaults to port 5000
-    # For GCP, the PORT variable is set automatically
+    # Render sets PORT as an environment variable
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
