@@ -14,10 +14,10 @@ from tensorflow.keras.models import load_model
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Update the model path relative to your project repository.
+# Make sure the 'models' folder exists and contains 'BEST_CNN2.keras'
 MODEL_PATH = os.path.join(os.getcwd(), 'models', 'BEST_CNN2.keras')
 try:
-    model = load_model(models/BEST_CNN2.keras)
+    model = load_model(MODEL_PATH)
     print("Model loaded successfully.")
 except Exception as e:
     print(f"Error loading model: {e}")
@@ -177,6 +177,6 @@ if __name__ == '__main__':
         shutil.rmtree(UPLOAD_FOLDER)
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # Render sets PORT as an environment variable
+    # Railway sets PORT as an environment variable
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
