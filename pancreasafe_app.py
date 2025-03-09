@@ -17,7 +17,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Update the model path relative to your project repository.
 MODEL_PATH = os.path.join(os.getcwd(), 'models', 'BEST_CNN2.keras')
 try:
-    model = load_model(MODEL_PATH)
+    model = load_model(models/BEST_CNN2.keras)
     print("Model loaded successfully.")
 except Exception as e:
     print(f"Error loading model: {e}")
