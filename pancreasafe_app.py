@@ -14,8 +14,8 @@ from tensorflow.keras.models import load_model
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Make sure the 'models' folder exists and contains 'BEST_CNN2.keras'
-MODEL_PATH = os.path.join("models", "BEST_CNN2.keras")
+# Ensure the model path is correct and absolute for Azure compatibility
+MODEL_PATH = os.path.join(os.getcwd(), "models", "BEST_CNN2.keras")
 try:
     model = load_model(MODEL_PATH)
     print("Model loaded successfully.")
@@ -60,80 +60,21 @@ def home():
         <meta charset="UTF-8">
         <title>Pancrea Safe | AI-Powered Pancreatic Analysis</title>
         <style>
-            /* (CSS omitted for brevity) */
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+            .container { max-width: 800px; margin: auto; padding: 20px; }
+            .upload-section { margin-top: 20px; }
         </style>
     </head>
     <body>
-        <header class="header">
-            <!-- Your header content -->
-        </header>
         <div class="container">
-            <div class="hero">
-                <h1>Smart Pancreatic Analysis</h1>
-                <p>Advanced AI detection with precision diagnostics</p>
-            </div>
-            <div class="upload-section">
-                <label class="upload-label">Upload DICOM Folder for Analysis</label>
-                <input type="file" id="fileInput" accept=".dcm" webkitdirectory directory multiple>
-                <button class="custom-upload" onclick="document.getElementById('fileInput').click()">Select DICOM Folder</button>
-                <button class="custom-upload" onclick="analyze()">Analyze DICOM Folder</button>
-                <div id="preview" alt="Folder preview"></div>
-                <div id="result"></div>
-            </div>
-            <!-- Additional sections as needed -->
+            <h1>Smart Pancreatic Analysis</h1>
+            <p>Upload your DICOM files for AI-powered pancreatic cancer detection.</p>
+            <form action="/predict" method="POST" enctype="multipart/form-data">
+                <label for="dicom_files">Upload DICOM Files:</label><br>
+                <input type="file" name="files" multiple><br><br>
+                <button type="submit">Analyze</button>
+            </form>
         </div>
-        <footer>
-            <p>© 2024 Pancrea Safe. Advancing medical diagnostics through AI innovation.</p>
-        </footer>
-        <script>
-            document.getElementById('fileInput').addEventListener('change', function(e) {
-                const preview = document.getElementById('preview');
-                preview.style.display = 'block';
-                let fileList = "<ul>";
-                for (let i = 0; i < e.target.files.length; i++){
-                    fileList += "<li>" + e.target.files[i].webkitRelativePath + "</li>";
-                }
-                fileList += "</ul>";
-                preview.innerHTML = fileList;
-            });
-
-            function analyze() {
-                const fileInput = document.getElementById('fileInput');
-                const resultDiv = document.getElementById('result');
-                const preview = document.getElementById('preview');
-
-                if (!fileInput.files.length) {
-                    alert('Please select a DICOM folder first!');
-                    return;
-                }
-
-                const formData = new FormData();
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    formData.append('files', fileInput.files[i]);
-                }
-
-                resultDiv.style.display = 'flex';
-                resultDiv.innerHTML = '<div class="loader"></div><span>Analyzing DICOM folder...</span>';
-                resultDiv.className = '';
-
-                fetch('/predict', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    resultDiv.innerHTML = data.prediction.includes('No')
-                        ? '🎉 <span style="margin-left: 12px;">No Tumor Detected</span>'
-                        : '⚠️ <span style="margin-left: 12px;">Tumor Detected</span>';
-                    resultDiv.className = data.prediction.includes('No') ? 'no-tumor' : 'tumor';
-                    preview.style.display = 'none';
-                })
-                .catch(error => {
-                    resultDiv.innerHTML = '⚠️ Error processing DICOM folder';
-                    resultDiv.className = 'tumor';
-                });
-            }
-        </script>
     </body>
     </html>
     '''
@@ -172,11 +113,6 @@ def predict():
     return jsonify({'prediction': prediction_text})
 
 if __name__ == '__main__':
-    # Clean up any previous uploads
-    if os.path.exists(UPLOAD_FOLDER):
-        shutil.rmtree(UPLOAD_FOLDER)
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-    # Railway sets PORT as an environment variable
+    # Use the PORT environment variable set by Azure App Service
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
