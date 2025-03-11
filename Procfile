@@ -1,1 +1,1 @@
-web: gunicorn pancresafe_app:app
+web: gunicorn --bind 0.0.0.0:$PORT pancreasafe_app:app
