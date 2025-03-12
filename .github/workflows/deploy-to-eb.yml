@@ -9,9 +9,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Configure AWS credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -19,20 +21,30 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # Step 3: Debugging AWS_REGION (Optional, remove after confirmation)
       - name: Echo AWS_REGION (DEBUGGING - REMOVE AFTER!)
-        run: echo "AWS_REGION is: ${{ secrets.AWS_REGION }}" #Debugging Line. Delete after confirmation
+        run: echo "AWS_REGION is: ${{ secrets.AWS_REGION }}"
+        # This debugging line can be removed after verification
 
+      # Step 4: Create a zip package for deployment
       - name: Create zip package
-        run: zip -r deploy.zip . -x ".git"
+        run: zip -r deploy.zip . -x ".git/*"
 
+      # Step 5: Upload the zip package to S3
       - name: Upload to S3
         run: |
           aws s3 cp deploy.zip s3://${{ secrets.AWS_S3_BUCKET }}/deploy.zip
 
+      # Step 6: Deploy to Elastic Beanstalk
       - name: Deploy to Elastic Beanstalk
         env:
           EB_APP_NAME: ${{ secrets.EB_APP_NAME }}
           EB_ENV_NAME: ${{ secrets.EB_ENV_NAME }}
         run: |
-          aws elasticbeanstalk update-environment --application-name "${{ env.EB_APP_NAME }}" --environment-name "${{ env.EB_ENV_NAME }}" --version-label "$(git rev-parse HEAD)" --source-bundle S3Bucket="${{ secrets.AWS_S3_BUCKET }}",S3Key=deploy.zip
-          aws elasticbeanstalk wait environment-updated --environment-name "${{ env.EB_ENV_NAME }}"
+          aws elasticbeanstalk update-environment \
+            --application-name "${{ env.EB_APP_NAME }}" \
+            --environment-name "${{ env.EB_ENV_NAME }}" \
+            --version-label "$(git rev-parse HEAD)" \
+            --source-bundle S3Bucket="${{ secrets.AWS_S3_BUCKET }}",S3Key=deploy.zip
+          aws elasticbeanstalk wait environment-updated \
+            --environment-name "${{ env.EB_ENV_NAME }}"
