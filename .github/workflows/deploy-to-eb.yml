@@ -3,7 +3,7 @@ name: Deploy to AWS Elastic Beanstalk
 on:
   push:
     branches:
-      - main  # or whichever branch triggers your deployment
+      - main  # Triggers deployment on push to main branch
 
 jobs:
   deploy:
@@ -26,11 +26,10 @@ jobs:
 
       # 4) Configure AWS Credentials
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1  # change if needed
+        run: |
+          export AKIASK5MCHV5CWSHNIQU=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export kaa3YkyhiBBS+cLnEpynLHU49nZPcdTXdpD62R2M=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_REGION=ap-south-1
 
       # 5) Deploy to Elastic Beanstalk
       - name: Deploy to Elastic Beanstalk
@@ -41,13 +40,13 @@ jobs:
           # Install the EB CLI
           pip install awsebcli
           
-          # Initialize EB config for your application & platform
-          eb init $EB_APP_NAME \
+          # Initialize EB CLI for your application & platform
+          eb init "$EB_APP_NAME" \
             --platform "64bit Amazon Linux 2023 running Python 3.9" \
-            --region ap-south-1
+            --region "$AWS_REGION"
           
           # Choose the correct environment
-          eb use $EB_ENV_NAME
+          eb use "$EB_ENV_NAME"
           
           # Deploy your latest changes
           eb deploy
