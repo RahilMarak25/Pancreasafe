@@ -3,37 +3,51 @@ name: Deploy to AWS Elastic Beanstalk
 on:
   push:
     branches:
-      - main  # Change to your default branch
+      - main  # or whichever branch triggers your deployment
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      # 1) Check out your repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Set Up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      # 2) Set up Python 3.9
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install Dependencies
-      run: pip install -r requirements.txt
+      # 3) Install dependencies (adjust if you have no requirements.txt)
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-south-1  # Change this to your AWS region
+      # 4) Configure AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1  # change if needed
 
-    - name: Deploy to Elastic Beanstalk
-      env:
-        EB_ENV_NAME: "Pancreatic-cancer-env"
-        EB_APP_NAME: "pancreatic-cancer"
-      run: |
-        pip install awsebcli
-        eb init $EB_APP_NAME --platform "Python 3.9" --region ap-south-1
-        eb use $EB_ENV_NAME
-        eb deploy
+      # 5) Deploy to Elastic Beanstalk
+      - name: Deploy to Elastic Beanstalk
+        env:
+          EB_ENV_NAME: "Pancreatic-cancer-env"
+          EB_APP_NAME: "pancreatic-cancer"
+        run: |
+          # Install the EB CLI
+          pip install awsebcli
+          
+          # Initialize EB config for your application & platform
+          eb init $EB_APP_NAME \
+            --platform "64bit Amazon Linux 2023 running Python 3.9" \
+            --region ap-south-1
+          
+          # Choose the correct environment
+          eb use $EB_ENV_NAME
+          
+          # Deploy your latest changes
+          eb deploy
