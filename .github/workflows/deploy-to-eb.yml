@@ -1,38 +1,39 @@
-name: Deploy to Elastic Beanstalk
+name: Deploy to AWS Elastic Beanstalk
 
 on:
   push:
     branches:
-      - main
+      - main  # Change to your default branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+    - name: Set Up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: Echo AWS_REGION (DEBUGGING - REMOVE AFTER!)
-        run: echo "AWS_REGION is: ${{ secrets.AWS_REGION }}" #Debugging Line. Delete after confirmation
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
 
-      - name: Create zip package
-        run: zip -r deploy.zip . -x ".git"
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1  # Change this to your AWS region
 
-      - name: Upload to S3
-        run: |
-          aws s3 cp deploy.zip s3://${{ secrets.AWS_S3_BUCKET }}/deploy.zip
-
-      - name: Deploy to Elastic Beanstalk
-        env:
-          EB_APP_NAME: ${{ secrets.EB_APP_NAME }}
-          EB_ENV_NAME: ${{ secrets.EB_ENV_NAME }}
-        run: |
-          aws elasticbeanstalk update-environment --application-name "${{ env.EB_APP_NAME }}" --environment-name "${{ env.EB_ENV_NAME }}" --version-label "$(git rev-parse HEAD)" --source-bundle S3Bucket="${{ secrets.AWS_S3_BUCKET }}",S3Key=deploy.zip
-          aws elasticbeanstalk wait environment-updated --environment-name "${{ env.EB_ENV_NAME }}"
+    - name: Deploy to Elastic Beanstalk
+      env:
+        EB_ENV_NAME: "your-eb-environment-name"
+        EB_APP_NAME: "your-eb-app-name"
+      run: |
+        pip install awsebcli
+        eb init $EB_APP_NAME --platform "Python 3.9" --region ap-south-1
+        eb use $EB_ENV_NAME
+        eb deploy
