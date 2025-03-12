@@ -29,7 +29,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ap-south-1
 
       # Step 5: Create zip package (Lambda deployment package)
       - name: Create zip package
@@ -51,5 +51,5 @@ jobs:
             --http-method POST \
             --integration-http-method POST \
             --type AWS \
-            --uri arn:aws:apigateway:${{ secrets.AWS_REGION }}:lambda:path/2015-03-31/functions/arn:aws:lambda:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:function:your-lambda-function-name/invocations \
+            --uri arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-south-1:${{ secrets.AWS_ACCOUNT_ID }}:function:your-lambda-function-name/invocations \
             --credentials arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/your-api-gateway-role
