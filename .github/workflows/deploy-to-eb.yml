@@ -1,4 +1,4 @@
-name: Deploy to Elastic Beanstalk
+name: Deploy Keras Model to AWS Lambda
 
 on:
   push:
@@ -9,43 +9,47 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout the code
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Configure AWS credentials
+      # Step 2: Set up Python
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Step 4: Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1 # Setting the region to Asia Pacific (Mumbai)
-      # Step 3: Debugging AWS_REGION (Optional, remove after confirmation)
-      - name: Echo AWS_REGION (DEBUGGING - REMOVE AFTER!)
-        run: echo "AWS_REGION is: ap-south-1" # Hardcoding for confirmation
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # Step 4: Create a zip package for deployment
+      # Step 5: Create zip package (Lambda deployment package)
       - name: Create zip package
-        run: zip -r deploy.zip . -x ".git/*"
+        run: zip -r lambda_function.zip . -x ".git/*"
 
-      # Step 5: Upload the zip package to S3
-      - name: Upload to S3
+      # Step 6: Deploy to AWS Lambda
+      - name: Update Lambda Function
         run: |
-          aws s3 cp deploy.zip s3://${{ secrets.AWS_S3_BUCKET }}/deploy.zip
+          aws lambda update-function-code \
+            --function-name your-lambda-function-name \
+            --zip-file fileb://lambda_function.zip
 
-      # Step 6: Deploy to Elastic Beanstalk
-      - name: Deploy to Elastic Beanstalk
-        env:
-          EB_APP_NAME: ${{ secrets.EB_APP_NAME }}
-          EB_ENV_NAME: ${{ secrets.EB_ENV_NAME }}
+      # Step 7: (Optional) Update API Gateway (if needed)
+      - name: Update API Gateway
         run: |
-          aws elasticbeanstalk create-application-version \
-            --application-name "${{ env.EB_APP_NAME }}" \
-            --version-label "ver-${{ github.sha }}" \
-            --source-bundle S3Bucket="${{ secrets.AWS_S3_BUCKET }}",S3Key=deploy.zip
-          aws elasticbeanstalk update-environment \
-            --application-name "${{ env.EB_APP_NAME }}" \
-            --environment-name "${{ env.EB_ENV_NAME }}" \
-            --version-label "ver-${{ github.sha }}"
-          aws elasticbeanstalk wait environment-updated \
-            --environment-name "${{ env.EB_ENV_NAME }}"
+          aws apigateway update-integration \
+            --rest-api-id your-api-id \
+            --resource-id your-resource-id \
+            --http-method POST \
+            --integration-http-method POST \
+            --type AWS \
+            --uri arn:aws:apigateway:${{ secrets.AWS_REGION }}:lambda:path/2015-03-31/functions/arn:aws:lambda:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:function:your-lambda-function-name/invocations \
+            --credentials arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/your-api-gateway-role
