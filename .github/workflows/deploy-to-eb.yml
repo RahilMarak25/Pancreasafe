@@ -30,8 +30,8 @@ jobs:
 
     - name: Deploy to Elastic Beanstalk
       env:
-        EB_ENV_NAME: "your-eb-environment-name"
-        EB_APP_NAME: "your-eb-app-name"
+        EB_ENV_NAME: "Pancreatic-cancer-env"
+        EB_APP_NAME: "pancreatic-cancer"
       run: |
         pip install awsebcli
         eb init $EB_APP_NAME --platform "Python 3.9" --region ap-south-1
