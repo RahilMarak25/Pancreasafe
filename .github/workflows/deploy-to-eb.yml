@@ -26,16 +26,21 @@ jobs:
 
       # 4) Configure AWS Credentials
       - name: Configure AWS Credentials
+        env:
+          AKIASK5MCHV5CWSHNIQU: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         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: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-south-1
         run: |
-          export AKIASK5MCHV5CWSHNIQU=${{ secrets.AWS_ACCESS_KEY_ID }}
-          export kaa3YkyhiBBS+cLnEpynLHU49nZPcdTXdpD62R2M=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          export AWS_REGION=ap-south-1
+          echo "AWS credentials configured"
 
       # 5) Deploy to Elastic Beanstalk
       - name: Deploy to Elastic Beanstalk
         env:
           EB_ENV_NAME: "Pancreatic-cancer-env"
           EB_APP_NAME: "pancreatic-cancer"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ap-south-1
         run: |
           # Install the EB CLI
           pip install awsebcli
